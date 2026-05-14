@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信号工作台 · 设计预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     shadcn dark theme tokens (no rounded corners)
+     ============================================================ */
+  :root {
+    --background: hsl(240 10% 3.9%);
+    --foreground: hsl(0 0% 98%);
+    --card: hsl(240 10% 6%);
+    --card-foreground: hsl(0 0% 98%);
+    --popover: hsl(240 10% 6%);
+    --popover-foreground: hsl(0 0% 98%);
+    --primary: hsl(0 0% 98%);
+    --primary-foreground: hsl(240 5.9% 10%);
+    --secondary: hsl(240 3.7% 15.9%);
+    --secondary-foreground: hsl(0 0% 98%);
+    --muted: hsl(240 3.7% 15.9%);
+    --muted-foreground: hsl(240 5% 64.9%);
+    --accent: hsl(240 3.7% 15.9%);
+    --accent-foreground: hsl(0 0% 98%);
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --border: hsl(240 3.7% 15.9%);
+    --input: hsl(240 3.7% 15.9%);
+    --ring: hsl(240 4.9% 83.9%);
+    --success: hsl(142 71% 45%);
+    --warning: hsl(38 92% 50%);
+
+    /* Stance markers — reanchored for 反茧房 visibility */
+    --stance-bullish: hsl(217 91% 60%);
+    --stance-bearish: hsl(0 84% 60%);
+    --stance-skeptical: hsl(280 65% 60%);
+    --stance-macro-bearish: hsl(38 92% 50%);
+    --stance-neutral: hsl(142 71% 45%);
+    --stance-contrarian: hsl(187 85% 53%);
+
+    --radius: 4px;
+
+    --font-sans: "Geist", "Fira Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-mono: "Geist Mono", "JetBrains Mono", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle rounded corners applied to all surface-like components */
+  .topic-card,
+  .tweet-card,
+  .bookmark-card,
+  .chip,
+  .btn-back,
+  .demo-tag,
+  .stance-count,
+  .detail-meta-tag,
+  .bookmark-topic-tag,
+  .future-slot,
+  .bookmarks-future,
+  .demo-tabs {
+    border-radius: var(--radius);
+  }
+  .stance-bar,
+  .stance-marker {
+    border-radius: 2px;
+  }
+
+  /* ============================================================
+     Demo Preview Toolbar (mockup-only)
+     ============================================================ */
+  .demo-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .demo-tag {
+    display: inline-block;
+    background: var(--warning);
+    color: hsl(240 5.9% 10%);
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .demo-hint {
+    color: var(--muted-foreground);
+    font-size: 11px;
+  }
+  .demo-tabs {
+    display: inline-flex;
+    border: 1px solid var(--border);
+  }
+  .demo-tab {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--muted-foreground);
+    padding: 4px 14px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 100ms, color 100ms;
+  }
+  .demo-tab:last-child { border-right: none; }
+  .demo-tab:hover { background: var(--accent); color: var(--foreground); }
+  .demo-tab.active { background: var(--primary); color: var(--primary-foreground); }
+  .demo-note {
+    margin-left: auto;
+    color: hsl(240 5% 45%);
+    font-size: 11px;
+  }
+
+  /* ============================================================
+     View routing
+     ============================================================ */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ============================================================
+     VIEW 1: WORKBENCH HOME
+     ============================================================ */
+  .workbench {
+    display: grid;
+    grid-template-columns: 220px 1fr 320px;
+    min-height: calc(100vh - 41px);
+  }
+
+  /* ---- LEFT: Categories ---- */
+  .col-left {
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+  }
+  .nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: hsl(240 5% 45%);
+    padding: 0 20px;
+    margin: 18px 0 8px;
+  }
+  .nav-label:first-child { margin-top: 0; }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    color: var(--muted-foreground);
+    font-size: 13px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: background 100ms, color 100ms;
+  }
+  .nav-row:hover { background: var(--accent); color: var(--foreground); }
+  .nav-row.active {
+    background: var(--accent);
+    color: var(--foreground);
+    border-left-color: var(--foreground);
+    font-weight: 500;
+  }
+  .nav-row-name { display: flex; align-items: center; gap: 8px; }
+  .nav-row-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+  }
+  .nav-row.active .nav-row-count { color: var(--foreground); }
+
+  /* ---- MIDDLE: Topic list ---- */
+  .col-mid {
+    padding: 18px 28px;
+    overflow-y: auto;
+  }
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: hsl(240 5% 45%);
+    margin-right: 2px;
+  }
+  .chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background 100ms, color 100ms;
+  }
+  .chip:hover { background: var(--accent); color: var(--foreground); }
+  .chip.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    font-weight: 500;
+  }
+  .filter-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 6px;
+  }
+
+  .topic-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 100ms, border-color 100ms;
+  }
+  .topic-card:hover {
+    background: var(--accent);
+    border-color: hsl(240 4.9% 30%);
+  }
+  .topic-row-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .topic-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+  }
+  .topic-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+  }
+  .topic-title {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--foreground);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .stance-bar {
+    display: flex;
+    height: 4px;
+    overflow: hidden;
+  }
+  .stance-seg { height: 100%; flex-shrink: 0; }
+  .stance-bullish-bg { background: var(--stance-bullish); }
+  .stance-bearish-bg { background: var(--stance-bearish); }
+  .stance-skeptical-bg { background: var(--stance-skeptical); }
+  .stance-macro-bg { background: var(--stance-macro-bearish); }
+  .stance-neutral-bg { background: var(--stance-neutral); }
+  .stance-contrarian-bg { background: var(--stance-contrarian); }
+
+  /* ---- RIGHT: Trends ---- */
+  .col-right {
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .trend-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--foreground);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .trend-title::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--warning);
+  }
+  .trend-row {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: padding 100ms;
+  }
+  .trend-row:hover { padding-left: 4px; }
+  .trend-row:last-child { border-bottom: none; }
+  .trend-line-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+  }
+  .trend-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .trend-change {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .trend-up { color: var(--success); }
+  .trend-down { color: var(--destructive); }
+  .trend-meta {
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+  }
+
+  .future-slot {
+    margin-top: 24px;
+    padding: 12px;
+    background: var(--background);
+    border: 1px dashed hsl(240 5% 30%);
+    font-size: 11px;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+  }
+  .future-slot strong {
+    color: var(--warning);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ============================================================
+     VIEW 2: TOPIC DETAIL
+     ============================================================ */
+  .detail {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 28px;
+  }
+  .detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .btn-back {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    flex-shrink: 0;
+    transition: background 100ms, color 100ms;
+  }
+  .btn-back:hover { background: var(--accent); color: var(--foreground); }
+
+  .detail-title-block { flex: 1; }
+  .detail-title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--foreground);
+    margin-bottom: 8px;
+  }
+  .detail-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .detail-meta-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--muted-foreground);
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .detail-meta-sep {
+    color: var(--border);
+  }
+
+  .stance-block {
+    margin-bottom: 28px;
+    padding-bottom: 22px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .stance-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .stance-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .stance-label-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stance-marker {
+    width: 4px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .stance-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .stance-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted-foreground);
+    background: var(--accent);
+    padding: 2px 10px;
+  }
+
+  .tweet-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    transition: background 100ms;
+  }
+  .tweet-card:hover { background: var(--accent); }
+  .tweet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .tweet-author {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+  .tweet-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: hsl(240 5% 45%);
+  }
+  .tweet-body {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--foreground);
+    margin-bottom: 10px;
+  }
+  .tweet-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .tweet-metrics {
+    display: flex;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted-foreground);
+  }
+  .tweet-metric { display: flex; align-items: center; gap: 4px; }
+  .tweet-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .tweet-link {
+    color: var(--muted-foreground);
+    font-size: 11px;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: color 100ms;
+  }
+  .tweet-link:hover {
+    text-decoration: underline;
+    color: var(--foreground);
+  }
+  .bookmark {
+    background: transparent;
+    border: none;
+    color: hsl(240 5% 45%);
+    font-size: 15px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 100ms;
+    padding: 0;
+  }
+  .bookmark:hover { color: var(--warning); }
+  .bookmark.on { color: var(--warning); }
+
+  /* ============================================================
+     VIEW 3: BOOKMARKS
+     ============================================================ */
+  .bookmarks {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 28px;
+  }
+  .bookmarks-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .bookmarks-title-count {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted-foreground);
+    font-weight: normal;
+  }
+  .bookmarks-future {
+    margin: 18px 0 24px;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--success);
+    font-size: 12px;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    position: relative;
+  }
+  .bookmarks-future strong {
+    color: var(--success);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .bookmarks-future-close {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: hsl(240 5% 45%);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .bookmarks-filter-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .bookmark-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .bookmark-topic-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--muted-foreground);
+    padding: 2px 10px;
+    font-size: 10px;
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: color 100ms;
+  }
+  .bookmark-topic-tag:hover { color: var(--foreground); }
+  .bookmark-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: hsl(240 5% 45%);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+
+<!-- ============================================================ VIEW 1 ============================================================ -->
+<div id="view-home" class="view active">
+  <div class="workbench">
+
+    <aside class="col-left">
+      <div class="nav-label">主入口</div>
+      <div class="nav-row active" data-view="home" onclick="showView('home', event)">
+        <span class="nav-row-name">全部</span>
+        <span class="nav-row-count">87</span>
+      </div>
+      <div class="nav-row" data-view="bookmarks" onclick="showView('bookmarks', event)">
+        <span class="nav-row-name">我的收藏</span>
+        <span class="nav-row-count">12</span>
+      </div>
+
+      <div class="nav-label">类别</div>
+      <div class="nav-row">
+        <span class="nav-row-name">Crypto</span>
+        <span class="nav-row-count">24</span>
+      </div>
+      <div class="nav-row">
+        <span class="nav-row-name">AI</span>
+        <span class="nav-row-count">18</span>
+      </div>
+      <div class="nav-row">
+        <span class="nav-row-name">宏观</span>
+        <span class="nav-row-count">12</span>
+      </div>
+      <div class="nav-row">
+        <span class="nav-row-name">美股</span>
+        <span class="nav-row-count">8</span>
+      </div>
+      <div class="nav-row">
+        <span class="nav-row-name">科技</span>
+        <span class="nav-row-count">15</span>
+      </div>
+      <div class="nav-row">
+        <span class="nav-row-name">其他</span>
+        <span class="nav-row-count">10</span>
+      </div>
+    </aside>
+
+    <main class="col-mid">
+      <div class="filter-bar">
+        <span class="filter-label">时间</span>
+        <button class="chip active">今日</button>
+        <button class="chip">本周</button>
+        <button class="chip">本月</button>
+        <div class="filter-divider"></div>
+        <span class="filter-label">排序</span>
+        <button class="chip active">重要度</button>
+        <button class="chip">时间</button>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">2h ago</span>
+          <span class="topic-count">8 条推文</span>
+        </div>
+        <div class="topic-title">BTC ETF 资金单日流入创年内新高，圈内外讨论加速</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-bullish-bg" style="flex:3"></div>
+          <div class="stance-seg stance-skeptical-bg" style="flex:2"></div>
+          <div class="stance-seg stance-macro-bg" style="flex:2"></div>
+          <div class="stance-seg stance-bearish-bg" style="flex:1"></div>
+        </div>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">4h ago</span>
+          <span class="topic-count">21 条推文</span>
+        </div>
+        <div class="topic-title">存储赛道再次活跃，多家协议公布新数据指标</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-bullish-bg" style="flex:4"></div>
+          <div class="stance-seg stance-macro-bg" style="flex:1"></div>
+        </div>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">6h ago</span>
+          <span class="topic-count">8 条推文</span>
+        </div>
+        <div class="topic-title">Anthropic 发布 Opus 4.7，长上下文能力突破百万级</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-bullish-bg" style="flex:3"></div>
+          <div class="stance-seg stance-skeptical-bg" style="flex:1"></div>
+        </div>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">8h ago</span>
+          <span class="topic-count">15 条推文</span>
+        </div>
+        <div class="topic-title">美联储官员表态变化，市场对降息预期分歧扩大</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-bullish-bg" style="flex:2"></div>
+          <div class="stance-seg stance-bearish-bg" style="flex:2"></div>
+          <div class="stance-seg stance-skeptical-bg" style="flex:1"></div>
+        </div>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">1d ago</span>
+          <span class="topic-count">6 条推文</span>
+        </div>
+        <div class="topic-title">以太坊核心开发者就 Pectra 后续路线分歧公开化</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-bullish-bg" style="flex:2"></div>
+          <div class="stance-seg stance-contrarian-bg" style="flex:3"></div>
+        </div>
+      </div>
+
+      <div class="topic-card" onclick="showView('detail', null)">
+        <div class="topic-row-1">
+          <span class="topic-time">1d ago</span>
+          <span class="topic-count">9 条推文</span>
+        </div>
+        <div class="topic-title">AI 监管框架欧盟新进展，多家头部公司发联合声明</div>
+        <div class="stance-bar">
+          <div class="stance-seg stance-neutral-bg" style="flex:4"></div>
+          <div class="stance-seg stance-skeptical-bg" style="flex:2"></div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="col-right">
+      <div class="trend-title">赛道趋势</div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">存储</span>
+          <span class="trend-change trend-up">+142%</span>
+        </div>
+        <div class="trend-meta">21 条讨论 · 主流共识：早期</div>
+      </div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">ETH ETF</span>
+          <span class="trend-change trend-up">+87%</span>
+        </div>
+        <div class="trend-meta">14 条讨论 · 立场分裂</div>
+      </div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">AI Agents</span>
+          <span class="trend-change trend-up">+64%</span>
+        </div>
+        <div class="trend-meta">18 条讨论 · 多元观点</div>
+      </div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">RWA</span>
+          <span class="trend-change trend-up">+21%</span>
+        </div>
+        <div class="trend-meta">8 条讨论 · 共识温和</div>
+      </div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">黄金</span>
+          <span class="trend-change trend-up">+15%</span>
+        </div>
+        <div class="trend-meta">11 条讨论 · 看多为主</div>
+      </div>
+
+      <div class="trend-row">
+        <div class="trend-line-1">
+          <span class="trend-name">memecoin</span>
+          <span class="trend-change trend-down">-34%</span>
+        </div>
+        <div class="trend-meta">3 条讨论 · 热度退潮</div>
+      </div>
+
+      <div class="future-slot">
+        <strong>v1 阶段</strong>
+        右栏仅赛道趋势。架构上保留为可扩展槽位，未来可叠加更多面板。
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- ============================================================ VIEW 2 ============================================================ -->
+<div id="view-detail" class="view">
+  <div class="detail">
+
+    <div class="detail-header">
+      <button class="btn-back" onclick="showView('home', null)">← 返回</button>
+      <div class="detail-title-block">
+        <div class="detail-title">BTC ETF 资金单日流入创年内新高，圈内外讨论加速</div>
+        <div class="detail-meta">
+          <span class="detail-meta-tag">CRYPTO</span>
+          <span>2h ago</span>
+          <span class="detail-meta-sep">/</span>
+          <span>8 tweets</span>
+          <span class="detail-meta-sep">/</span>
+          <span>4 stances</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stance 1 -->
+    <div class="stance-block">
+      <div class="stance-head">
+        <div class="stance-label-block">
+          <div class="stance-marker stance-bullish-bg"></div>
+          <div class="stance-label">看多 · 周期信号</div>
+        </div>
+        <div class="stance-count">3 条</div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@kol_a</span>
+          <span class="tweet-time">2h ago</span>
+        </div>
+        <div class="tweet-body">ETF 资金面拐点出现，重申 12 万美元目标位。链上数据也在配合，spot 市场吸收力强。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 1.2k</span>
+            <span class="tweet-metric">👁 48k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark on">★</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@kol_b</span>
+          <span class="tweet-time">3h ago</span>
+        </div>
+        <div class="tweet-body">历史看 ETF 周流入超 30 亿后 BTC 6 周内通常有 15%+ 涨幅。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 856</span>
+            <span class="tweet-metric">👁 32k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark">☆</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@cycletrader</span>
+          <span class="tweet-time">5h ago</span>
+        </div>
+        <div class="tweet-body">从 ETF 流入趋势 + 减半周期看，下一阶段已经启动。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 421</span>
+            <span class="tweet-metric">👁 18k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark">☆</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stance 2 -->
+    <div class="stance-block">
+      <div class="stance-head">
+        <div class="stance-label-block">
+          <div class="stance-marker stance-skeptical-bg"></div>
+          <div class="stance-label">质疑数据</div>
+        </div>
+        <div class="stance-count">2 条</div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@macro_alf</span>
+          <span class="tweet-time">1h ago</span>
+        </div>
+        <div class="tweet-body">"单日流入"是 net 还是 gross？口径切换可能影响数字 30%+。建议查 BlackRock 申购明细而不是聚合数据。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 2.4k</span>
+            <span class="tweet-metric">👁 87k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark on">★</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@datadiver</span>
+          <span class="tweet-time">3h ago</span>
+        </div>
+        <div class="tweet-body">这个数字里有 70% 来自机构 OTC 转入，零售层面其实降温。判断错误的因子。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 642</span>
+            <span class="tweet-metric">👁 24k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark">☆</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stance 3 -->
+    <div class="stance-block">
+      <div class="stance-head">
+        <div class="stance-label-block">
+          <div class="stance-marker stance-macro-bg"></div>
+          <div class="stance-label">宏观偏空</div>
+        </div>
+        <div class="stance-count">2 条</div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@macro_alf</span>
+          <span class="tweet-time">3h ago</span>
+        </div>
+        <div class="tweet-body">美元流动性才是大背景，ETF 流入只是 second-order 效应。RRP 余额没动是更重要的信号。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 3.1k</span>
+            <span class="tweet-metric">👁 112k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark on">★</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@fedspeak</span>
+          <span class="tweet-time">5h ago</span>
+        </div>
+        <div class="tweet-body">看 RRP 余额变化，加密资金流入更多是再分配，不是新增流动性。这种结构下涨势难持续。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 1.8k</span>
+            <span class="tweet-metric">👁 64k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark">☆</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stance 4 -->
+    <div class="stance-block">
+      <div class="stance-head">
+        <div class="stance-label-block">
+          <div class="stance-marker stance-bearish-bg"></div>
+          <div class="stance-label">看空 · 短期事件驱动</div>
+        </div>
+        <div class="stance-count">1 条</div>
+      </div>
+
+      <div class="tweet-card">
+        <div class="tweet-head">
+          <span class="tweet-author">@kol_c</span>
+          <span class="tweet-time">4h ago</span>
+        </div>
+        <div class="tweet-body">这一波流入和 spot 价格无关，是某基金调仓引起。不构成趋势信号，警惕短期反向。</div>
+        <div class="tweet-foot">
+          <div class="tweet-metrics">
+            <span class="tweet-metric">♡ 287</span>
+            <span class="tweet-metric">👁 11k</span>
+          </div>
+          <div class="tweet-actions">
+            <a class="tweet-link">→ 看原文</a>
+            <button class="bookmark">☆</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ VIEW 3 ============================================================ -->
+<div id="view-bookmarks" class="view">
+  <div class="bookmarks">
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px">
+      <button class="btn-back" onclick="showView('home', null)">← 返回</button>
+      <div class="bookmarks-title">
+        ★ 我的收藏 <span class="bookmarks-title-count">/ 12 条</span>
+      </div>
+    </div>
+
+    <div class="bookmarks-future">
+      <strong>v2 路线 · 历史观点验证</strong>
+      <button class="bookmarks-future-close">×</button>
+      你收藏的每条推文（含发布时间）会作为"待验证观点池"。当未来事件发生后，工具会自动回看哪些预测被验证了 — 给"对的人"加权重。
+    </div>
+
+    <div class="bookmarks-filter-bar">
+      <span class="filter-label">排序</span>
+      <button class="chip active">收藏时间</button>
+      <button class="chip">发布时间</button>
+      <div class="filter-divider"></div>
+      <span class="filter-label">类别</span>
+      <button class="chip active">全部</button>
+      <button class="chip">Crypto</button>
+      <button class="chip">AI</button>
+      <button class="chip">宏观</button>
+    </div>
+
+    <div class="bookmark-card">
+      <span class="bookmark-topic-tag">BTC ETF 资金单日流入创年内新高</span>
+      <div class="tweet-head">
+        <span class="tweet-author">@kol_a</span>
+        <span class="tweet-time">发布 2h ago</span>
+      </div>
+      <div class="tweet-body">ETF 资金面拐点出现，重申 12 万美元目标位。链上数据也在配合，spot 市场吸收力强。</div>
+      <div class="tweet-foot">
+        <div class="tweet-metrics">
+          <span class="tweet-metric">♡ 1.2k</span>
+          <span class="tweet-metric">👁 48k</span>
+        </div>
+        <div class="tweet-actions">
+          <a class="tweet-link">→ 看原文</a>
+          <button class="bookmark on">★</button>
+        </div>
+      </div>
+      <div class="bookmark-time">收藏于 2 hours ago</div>
+    </div>
+
+    <div class="bookmark-card">
+      <span class="bookmark-topic-tag">BTC ETF 资金单日流入创年内新高</span>
+      <div class="tweet-head">
+        <span class="tweet-author">@macro_alf</span>
+        <span class="tweet-time">发布 1h ago</span>
+      </div>
+      <div class="tweet-body">"单日流入"是 net 还是 gross？口径切换可能影响数字 30%+。建议查 BlackRock 申购明细而不是聚合数据。</div>
+      <div class="tweet-foot">
+        <div class="tweet-metrics">
+          <span class="tweet-metric">♡ 2.4k</span>
+          <span class="tweet-metric">👁 87k</span>
+        </div>
+        <div class="tweet-actions">
+          <a class="tweet-link">→ 看原文</a>
+          <button class="bookmark on">★</button>
+        </div>
+      </div>
+      <div class="bookmark-time">收藏于 1 hour ago</div>
+    </div>
+
+    <div class="bookmark-card">
+      <span class="bookmark-topic-tag">美联储官员表态变化</span>
+      <div class="tweet-head">
+        <span class="tweet-author">@macro_alf</span>
+        <span class="tweet-time">发布 3h ago</span>
+      </div>
+      <div class="tweet-body">美元流动性才是大背景，ETF 流入只是 second-order 效应。RRP 余额没动是更重要的信号。</div>
+      <div class="tweet-foot">
+        <div class="tweet-metrics">
+          <span class="tweet-metric">♡ 3.1k</span>
+          <span class="tweet-metric">👁 112k</span>
+        </div>
+        <div class="tweet-actions">
+          <a class="tweet-link">→ 看原文</a>
+          <button class="bookmark on">★</button>
+        </div>
+      </div>
+      <div class="bookmark-time">收藏于 3 hours ago</div>
+    </div>
+
+    <div class="bookmark-card">
+      <span class="bookmark-topic-tag">存储赛道再次活跃</span>
+      <div class="tweet-head">
+        <span class="tweet-author">@filecoin_research</span>
+        <span class="tweet-time">发布 4h ago</span>
+      </div>
+      <div class="tweet-body">存储赛道复活的根本是带宽 + AI 训练数据需求双重驱动，不是 token 炒作。基本面有真实改善。</div>
+      <div class="tweet-foot">
+        <div class="tweet-metrics">
+          <span class="tweet-metric">♡ 944</span>
+          <span class="tweet-metric">👁 35k</span>
+        </div>
+        <div class="tweet-actions">
+          <a class="tweet-link">→ 看原文</a>
+          <button class="bookmark on">★</button>
+        </div>
+      </div>
+      <div class="bookmark-time">收藏于 4 hours ago</div>
+    </div>
+
+    <div class="bookmark-card">
+      <span class="bookmark-topic-tag">以太坊核心开发者就 Pectra 后续路线分歧</span>
+      <div class="tweet-head">
+        <span class="tweet-author">@vbuterin_critic</span>
+        <span class="tweet-time">发布 1d ago</span>
+      </div>
+      <div class="tweet-body">Pectra 后的方向选择实际上决定了 ETH 未来 5 年定位。当前路线在 zkEVM 和 stateless client 之间摇摆。</div>
+      <div class="tweet-foot">
+        <div class="tweet-metrics">
+          <span class="tweet-metric">♡ 1.5k</span>
+          <span class="tweet-metric">👁 56k</span>
+        </div>
+        <div class="tweet-actions">
+          <a class="tweet-link">→ 看原文</a>
+          <button class="bookmark on">★</button>
+        </div>
+      </div>
+      <div class="bookmark-time">收藏于 yesterday</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showView(name, ev) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+
+    // Sync sidebar active state (only nav-rows with data-view attr)
+    document.querySelectorAll('.nav-row[data-view]').forEach(r => r.classList.remove('active'));
+    const navRow = document.querySelector('.nav-row[data-view="' + name + '"]');
+    if (navRow) navRow.classList.add('active');
+
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('.bookmark').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      btn.classList.toggle('on');
+      btn.textContent = btn.classList.contains('on') ? '★' : '☆';
+    });
+  });
+</script>
+
+</body>
+</html>

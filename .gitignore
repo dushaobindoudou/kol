@@ -1,0 +1,21 @@
+# Brainstorm wireframe scratch (not for public)
+.superpowers/
+
+# Claude Code local settings (machine-specific, may contain local permissions)
+.claude/settings.local.json
+
+# OS / Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Node / TypeScript (preempt v1 implementation noise)
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
